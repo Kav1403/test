@@ -1,1 +1,276 @@
-hello world ...!
+
+package src.main.java.com.zs.assignment4;
+
+import src.main.java.com.zs.assignment4.controller.LruController;
+
+/**
+ * main class where program starts.
+ */
+public class LRU {
+
+    public static void main(String[] args) {
+        LruController controller = new LruController();
+        controller.start();
+    }
+}
+
+
+
+
+package src.main.java.com.zs.assignment4.service;
+
+        import java.util.HashMap;
+
+/**
+ * Author @nikhil sisodia
+ * Organization ZopSmart
+ * It performs various instruction on LRU cache
+ */
+
+public class LruCacheService {
+
+    HashMap<String, Node> map = new HashMap<>();
+    Node head = new Node("", "");
+    Node tail = new Node("", "");
+    int capacity;
+
+
+    /**
+     * Initialize the LRU cache
+     * @param size - capacity of the LRU cache
+     */
+
+    public LruCacheService(int size){
+        this.capacity = size;
+        head.next = tail;
+        tail.prev = head;
+    }
+
+
+    /**
+     * insert the object into the LRU cache
+     * @param key - category
+     * @param value - hashmap of subcategory
+     */
+    public void put(String key, String value){
+        if(map.containsKey(key)){
+            remove(map.get(key));
+        }
+        if(map.size() == capacity){
+            System.out.println("Cache capacity exceed ! removing LRU product");
+            remove(tail.prev);
+        }
+
+        System.out.println("Putting product into the cache");
+        insert(new Node(key, value));
+    }
+
+    /**
+     * prints the LRU cache.
+     */
+
+    public void printCache(){
+
+        System.out.println("---------------------------");
+        System.out.println("LRU Cache");
+
+        Node head1 = head.next;
+
+        while(head1.next != null){
+            System.out.println("---" + head1.key);
+            head1 = head1.next;
+        }
+
+        System.out.println("---------------------------");
+        System.out.println();
+    }
+
+
+    /**
+     * gets the value from the cache
+     * @param key - to get the value from cache
+     * @return
+     */
+    public String get(String key){
+        if(map.containsKey(key)) {
+            Node node = map.get(key);
+            remove(node);
+            insert(node);
+            System.out.println("Product exist in cache");
+            return node.value;
+        }
+        System.out.println("Product does not exist in cache");
+        return null;
+    }
+
+
+    /**
+     * inserts the value next to the head of doubly linkedlist.
+     * @param node
+     */
+    private void insert(Node node) {
+        map.put(node.key, node);
+        node.next = head.next;
+        node.next.prev = node;
+        head.next = node;
+        node.prev = head;
+    }
+
+    /**
+     * remove value from the tail of doubly linkedlist
+     * @param node
+     */
+
+    private void remove(Node node){
+        map.remove(node.key);
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+
+    /**
+     * structure of doubly linked list.
+     */
+
+    public class Node{
+        String key;
+        String value;
+        Node prev;
+        Node next;
+        Node(String key, String value){
+            this.value = value;
+            this.key = key;
+        }
+
+    }
+}
+
+
+
+
+package src.main.java.com.zs.assignment4.controller;
+
+        import src.main.java.com.zs.assignment4.service.LruCacheService;
+
+        import java.util.HashMap;
+        import java.util.Scanner;
+
+/**
+ * Author @nikhil sisodia
+ * Organization ZopSmart
+ * controls the program
+ */
+public class LruController {
+
+    public void start(){
+
+        HashMap<String, HashMap<String, Boolean>> electronic = new HashMap<>();
+        electronic.put("Laptop", new HashMap<>());
+        electronic.put("Speaker", new HashMap<>());
+        electronic.put("Mobile", new HashMap<>());
+        electronic.put("Fan", new HashMap<>());
+
+        electronic.get("Laptop").put("Dell", true);
+        electronic.get("Laptop").put("HP", true);
+        electronic.get("Laptop").put("Acer", true);
+
+        electronic.get("Speaker").put("Boat", true);
+        electronic.get("Speaker").put("Skullcandy", true);
+        electronic.get("Speaker").put("Noise", true);
+
+        electronic.get("Mobile").put("Realme", true);
+        electronic.get("Mobile").put("Redmi", true);
+        electronic.get("Mobile").put("LG", true);
+
+        electronic.get("Fan").put("Orient", true);
+        electronic.get("Fan").put("Havells", true);
+
+
+
+        Scanner scan = new Scanner(System.in);
+
+        int choice;
+
+        LruCacheService cache = new LruCacheService(3);
+
+        do{
+
+            System.out.println("-------------------------------------------");
+            System.out.println("1: Display the category hierarchy");
+            System.out.println("2: Search product");
+            System.out.println("0: Exit");
+
+            choice = scan.nextInt();
+
+            switch (choice) {
+                case 1 : printCategory(electronic);
+                    break;
+                case 2 : {
+
+                    cache.printCache();
+
+                    System.out.println("Enter the product to search");
+                    scan.nextLine();
+                    String searchString = scan.nextLine();
+                    String ans = cache.get(searchString);
+                    if (ans != null) {
+                        System.out.println(ans + " returned from cache ");
+                    } else {
+
+                        if (searchInCategory(electronic, searchString)) {
+                            System.out.println("Getting from the database");
+                            cache.put(searchString, searchString);
+                        } else {
+                            System.out.println("Not present in the database");
+                        }
+                    }
+
+                }
+                break;
+            }
+
+        }
+        while(choice != 0);
+
+
+
+
+
+    }
+
+
+    /**
+     * search if the sub category present in the database or not.
+     * @param returnCatergory - database
+     * @param string - sub category to search
+     */
+
+    private boolean searchInCategory(HashMap<String, HashMap<String, Boolean>> returnCatergory, String string) {
+
+        for(HashMap<String, Boolean> map : returnCatergory.values()){
+            for(String key : map.keySet()){
+//                        System.out.println(key + " " + string);
+                if(string.equals(key)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * prints the category hierarchy
+     * @param electronic - category database
+     */
+    private void printCategory(HashMap<String, HashMap<String, Boolean>> electronic) {
+
+        for(String key : electronic.keySet()){
+            System.out.println(key);
+            for(String subKey : electronic.get(key).keySet()){
+                System.out.println("---" + subKey);
+
+            }
+        }
+    }
+}
+
